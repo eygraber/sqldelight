@@ -205,6 +205,31 @@ class SelectQueryTypeTest {
        |""".trimMargin())
   }
 
+  @Test fun `trying to bind a column name throws an exception`() {
+    val file = FixtureCompiler.parseSql("""
+       |CREATE TABLE socialFeedItem (
+       |  message TEXT,
+       |  userId TEXT,
+       |  creation_time INTEGER
+       |);
+       |
+       |select_news_list:
+       |SELECT * FROM socialFeedItem WHERE message IS NOT NULL AND userId = ? ORDER BY ? DESC LIMIT ?;
+       |""".trimMargin(), tempFolder)
+
+    val query = file.namedQueries.first()
+    val generator = SelectQueryGenerator(query)
+
+    try {
+      generator.querySubtype()
+      assert(false) {
+        "Binding a column name should throw an exception"
+      }
+    } catch (e: IllegalArgumentException) {
+      assertThat(e).hasMessageThat().isEqualTo("Binding a column name is not allowed")
+    }
+  }
+
   @Test fun `nullable parameter has spaces`() {
     val file = FixtureCompiler.parseSql("""
        |CREATE TABLE IF NOT EXISTS Friend(

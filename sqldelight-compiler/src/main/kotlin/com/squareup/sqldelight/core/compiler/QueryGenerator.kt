@@ -7,6 +7,7 @@ import com.alecstrong.sql.psi.core.psi.SqlTypes
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
+import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.NameAllocator
@@ -95,6 +96,11 @@ abstract class QueryGenerator(private val query: BindableQuery) {
     // For each argument in the sql
     orderedBindArgs.forEach { (_, argument, bindArg) ->
       val type = argument.type
+
+      if (type.column == null && type.javaType.copy() == ANY) {
+        throw IllegalArgumentException("Binding a column name is not allowed")
+      }
+
       // Need to replace the single argument with a group of indexed arguments, calculated at
       // runtime from the list parameter:
       // val idIndexes = id.mapIndexed { index, _ -> "?${1 + previousArray.size + index}" }.joinToString(prefix = "(", postfix = ")")
